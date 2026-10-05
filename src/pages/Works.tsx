@@ -1,10 +1,19 @@
+import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
-import { works } from '../data/works'
+import { works, type Work } from '../data/works'
 import ProjectCard from '../components/ProjectCard'
+import ProjectModal from '../components/scenes/WorkScenes'
 
 const categories = ['全部', '3D 可视化', '3D 建模', '交互设计', '视频渲染', '视频剪辑']
 
 export default function Works() {
+  const [active, setActive] = useState('全部')
+  const [selected, setSelected] = useState<Work | null>(null)
+
+  const filtered = useMemo(
+    () => (active === '全部' ? works : works.filter((w) => w.category === active)),
+    [active],
+  )
   return (
     <section id="works" className="relative z-10 min-h-screen px-6 py-20 md:px-12 md:py-32">
       <div className="mx-auto max-w-6xl">
@@ -41,7 +50,12 @@ export default function Works() {
             <button
               key={cat}
               data-hover
-              className="rounded-full border border-white/10 px-4 py-1.5 text-xs font-medium text-white/50 transition-colors hover:border-white/30 hover:text-white"
+              onClick={() => setActive(cat)}
+              className={`rounded-full border px-4 py-1.5 text-xs font-medium transition-colors ${
+                active === cat
+                  ? 'border-white/60 bg-white/10 text-white'
+                  : 'border-white/10 text-white/50 hover:border-white/30 hover:text-white'
+              }`}
             >
               {cat}
             </button>
@@ -50,11 +64,21 @@ export default function Works() {
 
         {/* project grid */}
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {works.map((work, i) => (
-            <ProjectCard key={work.id} work={work} index={i} />
+          {filtered.map((work, i) => (
+            <ProjectCard
+              key={work.id}
+              work={work}
+              index={i}
+              onOpen={() => setSelected(work)}
+            />
           ))}
         </div>
       </div>
+
+      {/* interactive detail modal — mounted only while open (unmount stops the canvas loop) */}
+      {selected && (
+        <ProjectModal work={selected} onClose={() => setSelected(null)} />
+      )}
     </section>
   )
 }

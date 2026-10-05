@@ -13,11 +13,29 @@ const statusColors: Record<Work['status'], string> = {
   concept: '#6b6b80',
 }
 
-export default function ProjectCard({ work, index }: { work: Work; index: number }) {
+export default function ProjectCard({
+  work,
+  index,
+  onOpen,
+}: {
+  work: Work
+  index: number
+  onOpen?: () => void
+}) {
   return (
     <motion.article
-      className="glass group relative flex flex-col justify-between rounded-2xl p-6 transition-all duration-500 hover:border-white/20"
+      className="glass group relative flex cursor-pointer flex-col justify-between rounded-2xl p-6 transition-all duration-500 hover:border-white/20"
       data-hover
+      role="button"
+      tabIndex={0}
+      aria-label={`打开 ${work.title} 交互演示`}
+      onClick={onOpen}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          onOpen?.()
+        }
+      }}
       initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-80px' }}
@@ -53,7 +71,7 @@ export default function ProjectCard({ work, index }: { work: Work; index: number
         <p className="text-sm text-white/70 leading-relaxed">{work.description}</p>
       </div>
 
-      <div className="relative z-10 flex flex-wrap gap-2 mt-4">
+      <div className="relative z-10 flex flex-wrap items-center gap-2 mt-4">
         {work.tags.map((tag) => (
           <span
             key={tag}
@@ -62,6 +80,12 @@ export default function ProjectCard({ work, index }: { work: Work; index: number
             {tag}
           </span>
         ))}
+        <span
+          className="ml-auto text-xs font-mono opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+          style={{ color: work.color }}
+        >
+          ▶ 交互演示
+        </span>
       </div>
     </motion.article>
   )

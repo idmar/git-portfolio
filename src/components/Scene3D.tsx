@@ -5,6 +5,13 @@ import { EffectComposer, Bloom, ChromaticAberration } from '@react-three/postpro
 import * as THREE from 'three'
 import { useState, useEffect } from 'react'
 
+// resolve public/ assets relative to the deploy base path
+const asset = (p: string) => `${import.meta.env.BASE_URL}${p}`
+
+// lightweight tier for phones: fewer particles/shapes, lower DPR
+const IS_MOBILE =
+  typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+
 // ─── Distorted Blob ──────────────────────────────────────────────
 function DistortedBlob() {
   const mesh = useRef<THREE.Mesh>(null)
@@ -45,7 +52,7 @@ function DistortedBlob() {
 function FloatingShapes() {
   const shapes = useMemo(
     () =>
-      Array.from({ length: 12 }, (_, i) => ({
+      Array.from({ length: IS_MOBILE ? 7 : 12 }, (_, i) => ({
         id: i,
         position: [
           (Math.random() - 0.5) * 12,
@@ -92,7 +99,7 @@ function FloatingShapes() {
 // ─── Particle Field ──────────────────────────────────────────────
 function ParticleField() {
   const ref = useRef<THREE.Points>(null)
-  const count = 800
+  const count = IS_MOBILE ? 320 : 800
 
   const positions = useMemo(() => {
     const arr = new Float32Array(count * 3)
@@ -159,7 +166,8 @@ function SceneContents() {
         far={4}
         color="#ff006e"
       />
-      <Environment preset="city" />
+      {/* local HDR (public/hdri) — no runtime CDN dependency */}
+      <Environment files={asset('hdri/city.hdr')} />
     </>
   )
 }
@@ -172,8 +180,9 @@ export default function Scene3D() {
 
   useEffect(() => {
     const updateDpr = () => {
-      setDpr(Math.min(window.devicePixelRatio, 2))
+      setDpr(Math.min(window.devicePixelRatio, IS_MOBILE ? 1.5 : 2))
     }
+    updateDpr()
     window.addEventListener('resize', updateDpr)
     return () => window.removeEventListener('resize', updateDpr)
   }, [])
@@ -194,7 +203,7 @@ export default function Scene3D() {
             luminanceSmoothing={0.9}
             mipmapBlur
           />
-          <ChromaticAberration offset={caOffset} />
+          {IS_MOBILE ? null : <ChromaticAberration offset={caOffset} />}
         </EffectComposer>
       </Suspense>
     </Canvas>
